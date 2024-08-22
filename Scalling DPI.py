@@ -1,0 +1,52 @@
+import ctypes
+
+# 定义常量和结构体
+SPI_SETNONCLIENTMETRICS = 0x002A
+NONCLIENTMETRICS = ctypes.POINTER(ctypes.c_int)
+
+class NONCLIENTMETRICSW(ctypes.Structure):
+    _fields_ = [
+        ('cbSize', ctypes.c_uint),
+        ('iBorderWidth', ctypes.c_int),
+        ('iScrollWidth', ctypes.c_int),
+        ('iScrollHeight', ctypes.c_int),
+        ('iCaptionWidth', ctypes.c_int),
+        ('iCaptionHeight', ctypes.c_int),
+        ('lfCaptionFont', ctypes.c_int * 6),
+        ('iSmCaptionWidth', ctypes.c_int),
+        ('iSmCaptionHeight', ctypes.c_int),
+        ('lfSmCaptionFont', ctypes.c_int * 6),
+        ('iMenuWidth', ctypes.c_int),
+        ('iMenuHeight', ctypes.c_int),
+        ('lfMenuFont', ctypes.c_int * 6),
+        ('lfStatusFont', ctypes.c_int * 6),
+        ('lfMessageFont', ctypes.c_int * 6),
+        ('iPaddedBorderWidth', ctypes.c_int)
+    ]
+
+# 获取当前DPI设置
+def get_dpi():
+    user32 = ctypes.windll.user32
+    hdc = user32.GetDC(None)
+    dpi = user32.GetDeviceCaps(hdc, 88) / 96
+    user32.ReleaseDC(None, hdc)
+    return dpi
+
+# 设置DPI
+def set_dpi(new_dpi):
+    user32 = ctypes.windll.user32
+    ncm = NONCLIENTMETRICSW()
+    ncm.cbSize = ctypes.sizeof(NONCLIENTMETRICSW)
+    user32.SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, ncm.cbSize, ctypes.byref(ncm), 0)
+    ncm.lfCaptionFont[0] = int(new_dpi * 96 / 72)
+    ncm.lfSmCaptionFont[0] = int(new_dpi * 96 / 72)
+    ncm.lfMenuFont[0] = int(new_dpi * 96 / 72)
+    ncm.lfStatusFont[0] = int(new_dpi * 96 / 72)
+    ncm.lfMessageFont[0] = int(new_dpi * 96 / 72)
+    user32.SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, ncm.cbSize, ctypes.byref(ncm), 0)
+
+# 示例：将DPI设置为150%
+current_dpi = get_dpi()
+print("Current DPI:", current_dpi)
+set_dpi(150)
+print("New DPI:", get_dpi())
